@@ -1,14 +1,16 @@
 import React from 'react'
 import JobCard from './JobCard'
 
-const JobListing = () => {
+const JobListing = (title) => {
+  
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h2 className="text-3xl font-extrabold text-gray-900 text-center">Featured Jobs</h2>
-      <JobCard />
-      <JobCard />
-      <JobCard />
-    </section>
+    <div className="max-w-screen mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-3 justify-around gap-5 mx-auto">
+        <JobCard />
+        <JobCard />
+        <JobCard />
+      </div>
+    </div>
   )
 }
 
