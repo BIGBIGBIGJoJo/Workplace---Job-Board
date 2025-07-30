@@ -5,7 +5,7 @@ import EmployeeFooter from '../components/EmployeeFooter'
 
 const EmployeeLayout = () => {
   return (
-    <>
+    <>  
       <EmployeeNavbar />
       <Outlet />
       <EmployeeFooter />

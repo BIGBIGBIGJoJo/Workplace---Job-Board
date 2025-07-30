@@ -8,8 +8,9 @@ import {
 import EmployeeLayout from "./layout/EmployeeLayout";
 import HomePage from "./pages/HomePage";
 import JobsPage from "./pages/JobsPage";
-import CompaniesPage from "./pages/CompaniesPage";
+import ProfilePage from "./pages/ProfilePage";
 import AboutPage from "./pages/AboutPage";
+import Test from "./components/test";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -17,8 +18,9 @@ const App = () => {
       <Route element={<EmployeeLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/jobs" element={<JobsPage />} />
-        <Route path="/companies" element={<CompaniesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/test" element={<Test />} />
       </Route>
     )
   );
