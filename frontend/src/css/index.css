@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
 body {
-  font-family: sans-serif,
+  font-family: sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(13, 57, 104, 0.24);
+}
+
+::-webkit-scrollbar-thumb {
+  background:  rgba(97, 109, 145, 0.852);
+  border: transparent;
+  border-radius: 4px;
 }
