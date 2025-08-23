@@ -55,7 +55,7 @@ const EmployeeNavbar = () => {
           </div>
         </div>
         <div className="ml-6 flex items-center justify-center">
-          <Link to="/authorisation"
+          <Link to="/authentication"
             className="bg-blue-600 shadow-sm cursor-pointer text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-700 hover:shadow-md hover:scale-110 transition-all">
             Sign in
           </Link>

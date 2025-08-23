@@ -11,13 +11,11 @@ const Modal = ({ isOpen, closeModal, child }) => {
         closeModal();
       }
     };
-
     document.addEventListener("keydown", escapeKeyExit);
 
     return () => {
       document.removeEventListener("keydown", escapeKeyExit);
     }
-
   }, []);
 
   return (
@@ -37,7 +35,8 @@ const Modal = ({ isOpen, closeModal, child }) => {
               color: "gray",
               fontSize: "2rem",
               cursor: "pointer"
-            }} />
+            }} 
+              onClick={closeModal}/>
             {child}
           </div>
         </div>

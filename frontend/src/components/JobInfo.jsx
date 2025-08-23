@@ -16,7 +16,7 @@ const JobInfo = ({ job }) => {
         <div className="block bg-gray-300 h-1 mb-12"></div>
 
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-blue-500 mb-6 border-l-4 border-blue-500 pl-6 py-3"
+          <h2 className="text-3xl font-bold text-blue-700 mb-6 border-l-3 border-blue-500 pl-6 py-3"
             style={{ background: "linear-gradient(135deg, #dbeafe, #ffffff 60% )" }}>
             About Us
           </h2>
@@ -28,7 +28,7 @@ const JobInfo = ({ job }) => {
 
 
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-blue-500 mb-6 border-l-4 border-blue-500 pl-6 py-3"
+          <h2 className="text-3xl font-bold text-blue-700 mb-6 border-l-3 border-blue-500 pl-6 py-3"
             style={{ background: "linear-gradient(135deg, #dbeafe, #ffffff 60% )" }}>
             Job Description
           </h2>
@@ -39,7 +39,7 @@ const JobInfo = ({ job }) => {
         </section>
 
         <section>
-          <h2 className="text-3xl font-bold text-blue-500 mb-6 border-l-4 border-blue-500 pl-6 py-3"
+          <h2 className="text-3xl font-bold text-blue-700 mb-6 border-l-3 border-blue-500 pl-6 py-3"
             style={{ background: "linear-gradient(135deg, #dbeafe, #ffffff 60% )" }}>
             Requirements
           </h2>
