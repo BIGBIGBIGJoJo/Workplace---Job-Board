@@ -16,7 +16,7 @@ const JobCard = ({job}) => {
 
   return (
     <div className="max-w-3xl bg-white p-6 rounded-lg shadow-md transition duration-400 hover:shadow-lg h-fit">
-      <h3 className="text-xl font-semibold text-gray-700">{job.title}</h3> {/* change to title */}
+      <h3 className="text-xl font-semibold text-gray-700">{job.title}</h3>
       <p className="mt-2 text-sm text-gray-500">{job.company.name}</p>
       <p className="mt-1 text-sm text-gray-500">{job.location}</p>
 
@@ -35,7 +35,7 @@ const JobCard = ({job}) => {
         Show Job Info
       </button>
 
-      <Modal isOpen={modalOpened} closeModal={closeModal} child={<JobInfo key={job.id} job={job}/>}></Modal>
+      <Modal isOpen={modalOpened} closeModal={closeModal} child={<JobInfo key={job.id} job={job}/>} />
 
     </div>
   )

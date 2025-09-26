@@ -1,137 +1,189 @@
 import React, { useContext, useState } from 'react';
+import LoggingContext from '../../tool/logging/LoggingContext';
+import { Link, useNavigate } from 'react-router-dom';
+import UserDataContext from "../../tool/userData/UserDataContext";
 
 const LogInPage = () => {
-  const [activeTab, setActiveTab] = useState('employee');
-  const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [logged, setLogged] = useState(false);
+  const nav = useNavigate();
 
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    tab: 'employee',
+  });
+  const [errors, setErrors] = useState({});
 
-  const handleTabSwitch = (tab) => {
-    setActiveTab(tab);
-    setError('');
-    setMessage('');
+  const { setLogged } = useContext(LoggingContext);
+  const { setUser } = useContext(UserDataContext);
+
+  const handleTabSwitch = (selectedTab) => {
+    setErrors({});
+    setFormData({ email: '', password: '', tab: selectedTab });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userEmail || !userPassword) {
-      setError('Please fill in your email or Password.');
-      return;
+    setErrors({});
+
+    // Login API call
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      setUser(data.user);
+      console.log(data.user);
+
+      if (data.matched) {
+        setLogged(true);
+        formData.tab === 'employee' ? nav("/") : nav('/employer');
+      } else {
+        setLogged(false);
+        setErrors(data.errors)
+      }
+    } catch (error) {
+      console.log("Error: ", error)
     }
-
-    //Login API call
-    const userType = activeTab;
-    const email = userEmail;
-    const password = userPassword;
-    const res = await fetch("/api/authentication", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userType, email, password })
-    })
-      .then(req => req.json())
-      .then(data => {
-
-        if (data.matched) {
-          setLogged(true);
-          console.log(logged);
-        } else {
-          setLogged(false);
-        }
-        console.log(logged);
-      })
   };
 
-  const handleForgotuserPassword = (userType) => {
-  };
-
-  const handleSignUp = (userType) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <div className="flex mb-6">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
+
+        <div>
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            {formData.tab === 'employee' ? 'Employee' : 'Employer'} Log In
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Access your {formData.tab === 'employee' ? 'job opportunities' : 'hiring dashboard'}
+          </p>
+        </div>
+
+        <div className="flex mb-6 border-b border-gray-200">
           <button
-            className={`flex-1 py-2 text-center font-semibold ${activeTab === 'employee' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-              } rounded-l-lg focus:outline-none`}
+            className={`flex-1 py-3 text-sm font-semibold ${formData.tab === 'employee'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600 hover:text-blue-500'
+              } focus:outline-none`}
             onClick={() => handleTabSwitch('employee')}
           >
             Employee
           </button>
           <button
-            className={`flex-1 py-2 text-center font-semibold ${activeTab === 'employer' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-              } rounded-r-lg focus:outline-none`}
+            className={`flex-1 py-3 text-sm font-semibold ${formData.tab === 'employer'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600 hover:text-blue-500'
+              } focus:outline-none`}
             onClick={() => handleTabSwitch('employer')}
           >
             Employer
           </button>
         </div>
-        <div>
 
-          {
-            activeTab === 'employee' ?
-              (<h2 className="text-xl font-bold mb-4 text-center">Employee Login</h2>) :
-              (<h2 className="text-xl font-bold mb-4 text-center">Employer Login</h2>)
-          }
-
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-700">Email</label>
+              <label htmlFor="email" className="block text-sm text-gray-700">
+                Email Address
+              </label>
               <input
+                required
+                id="email"
+                name="email"
                 type="email"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 px-2 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                placeholder="you@example.com"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
             <div>
-              <label className="block text-gray-700">Password</label>
+              <label htmlFor="password" className="block text-sm text-gray-700">
+                Password
+              </label>
               <input
+                required
+                id="password"
+                name="password"
                 type="password"
-                value={userPassword}
-                onChange={(e) => setUserPassword(e.target.value)}
-                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                className="mt-1 px-2 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                placeholder="••••••••"
               />
             </div>
-            <button
-              onClick={handleSubmit}
-              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 active:bg-blue-700"
-            >
-              Login
-            </button>
-
-            {/* login by google etc. */}
-            <button
-              className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 flex items-center justify-center gap-2"
-            >
-              Login with Google
-            </button>
-
-            <div className="flex justify-between text-sm">
-              <button
-                onClick={() => handleForgotuserPassword('Employee')}
-                className="text-blue-500 hover:underline"
-              >
-                Forgot password?
-              </button>
-              <button
-                onClick={() => handleSignUp('Employee')}
-                className="text-blue-500 hover:underline"
-              >
-                Sign Up
-              </button>
-            </div>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-            {message && <p className="text-green-500 mt-2">{message}</p>}
           </div>
-        </div>
+          {errors.form && (
+            <p className="mt-1 text-sm text-center text-red-600">{errors.form}</p>
+          )}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+            <Link
+              to="/forget_password"
+              className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              Log In
+            </button>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M12 0C5.372 0 0 5.373 0 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 22.954 24 17.99 24 12 24 5.373 18.627 0 12 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Log in with Google
+            </button>
+          </div>
+        </form>
+
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link
+            to="/signing"
+            className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+          >
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );

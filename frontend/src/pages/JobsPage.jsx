@@ -1,5 +1,6 @@
 import React from 'react'
 import JobListing from '../components/JobListing'
+import LogInBlocking from "../tool/logging/LogInBlocking"
 
 const JobsPage = () => {
   return (
@@ -19,7 +20,6 @@ const JobsPage = () => {
           <button className="flex-1 cursor-pointer px-4 py-2 border-transparent text-sm font-medium rounded-r-lg text-white bg-blue-800 hover:bg-blue-900">Search</button>
         </div>
       </nav>
-
       <JobListing />
     </>
   )

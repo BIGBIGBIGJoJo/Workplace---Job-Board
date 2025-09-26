@@ -1,48 +1,44 @@
 import React from 'react';
 
+
 function Test() {
-  const openPopup = () => {
-    // Open a new window
-    const newWindow = window.open('', 'PopupWindow', 'width=400,height=400');
+    const containerStyle = {
+        position: 'relative',
+        width: '100%',
+        height: '400px',
+        backgroundColor: 'rgba(50, 150, 250, 0.5)', // Semi-transparent background color
+        overflow: 'hidden',
+    };
 
-    // Write HTML to the new window with a container and script tags
-    newWindow.document.write(`
-      <html>
-        <head>
-          <title>Popup Window</title>
-          <!-- Include React and ReactDOM via CDN -->
-          <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-        </head>
-        <body>
-          <div id="popup-root"></div>
-          <script type="text/babel">
-            // Define the React component for the popup
-            function PopupComponent() {
-              return (
-                <div>
-                  <h1>Popup Window</h1>
-                  <p>This is a React component in a new window!</p>
-                  <button onClick={() => window.close()}>Close Window</button>
-                </div>
-              );
-            }
+    const overlayStyle = {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '24px',
+        opacity: 0,
+        transition: 'opacity 0.3s',
+    };
 
-            // Render the component in the new window
-            ReactDOM.render(<PopupComponent />, document.getElementById('popup-root'));
-          </script>
-        </body>
-      </html>
-    `);
-    newWindow.document.close(); // Close the document to ensure rendering
-  };
+    const [hovered, setHovered] = React.useState(false);
 
-  return (
-    <div>
-      <button onClick={openPopup}>Open Popup Window</button>
-    </div>
-  );
+    return (
+        <div
+            style={containerStyle}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            <div style={{ ...overlayStyle, opacity: hovered ? 1 : 0 }}>
+                Hello, Backdrop Filter!
+            </div>
+        </div>
+    );
 }
 
 export default Test;

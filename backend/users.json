@@ -1,0 +1,10 @@
+[
+  {
+    "id": 0,
+    "firstName": "test",
+    "lastName": "test",
+    "email": "test@test.test",
+    "password": "$2b$10$S0PykpI.vWaIIQs4Bf8M4O1AANIW6ajGeKnf8/GQoGeY3xUWYKAYm",
+    "role": "jobseeker"
+  }
+]
