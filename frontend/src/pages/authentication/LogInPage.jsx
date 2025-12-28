@@ -2,15 +2,22 @@ import React, { useContext, useState } from 'react';
 import LoggingContext from '../../tool/logging/LoggingContext';
 import { Link, useNavigate } from 'react-router-dom';
 import UserDataContext from "../../tool/userData/UserDataContext";
+import { useEffect } from "react";
 
 const LogInPage = () => {
   const nav = useNavigate();
+  
+  const [rememberMe, setRememberMe] = useState(() => {
+    const storedValue = localStorage.getItem('rememberMe');
+    return storedValue === 'true';
+  });
 
   const [formData, setFormData] = useState({
-    email: '',
+    email: rememberMe ? localStorage.getItem('rememberedEmail') : '',
     password: '',
-    tab: 'employee',
+    tab: rememberMe ? localStorage.getItem('rememberedTab') : 'employee',
   });
+
   const [errors, setErrors] = useState({});
 
   const { setLogged } = useContext(LoggingContext);
@@ -18,7 +25,7 @@ const LogInPage = () => {
 
   const handleTabSwitch = (selectedTab) => {
     setErrors({});
-    setFormData({ email: '', password: '', tab: selectedTab });
+    setFormData({...formData, tab: selectedTab });
   };
 
   const handleSubmit = async (e) => {
@@ -40,6 +47,18 @@ const LogInPage = () => {
       console.log(data.user);
 
       if (data.matched) {
+
+        // Remember me
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email);
+          localStorage.setItem('rememberedTab', formData.tab);
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          localStorage.removeItem('rememberedEmail');
+          localStorage.removeItem('rememberedTab');
+          localStorage.setItem('rememberMe', 'false');
+        }
+
         setLogged(true);
         formData.tab === 'employee' ? nav("/") : nav('/employer');
       } else {
@@ -57,8 +76,8 @@ const LogInPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-gradient-to-b from-white via-blue-50 to-blue-200 p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
 
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
@@ -103,7 +122,7 @@ const LogInPage = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 px-2 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                className="mt-1 px-4 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
                 placeholder="you@example.com"
               />
               {errors.email && (
@@ -121,8 +140,8 @@ const LogInPage = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 px-2 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
-                placeholder="••••••••"
+                className="mt-1 px-4 pt-2 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                placeholder="********"
               />
             </div>
           </div>
@@ -136,8 +155,13 @@ const LogInPage = () => {
                 name="remember-me"
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                checked={rememberMe}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  setRememberMe(newValue);
+                }}
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label type="checkbox" className="ml-2 block text-sm text-gray-900">
                 Remember me
               </label>
             </div>
@@ -184,8 +208,8 @@ const LogInPage = () => {
             Sign up
           </Link>
         </p>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

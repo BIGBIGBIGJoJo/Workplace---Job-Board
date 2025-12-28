@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import HomeHero from "../components/HomeHero";
-import WelcomeNav from "../components/WelcomeNav";
-import HomeJobListing from "../components/HomeJobListing";
+import HomeHero from "../../components/HomeHero";
+import WelcomeNav from "../../components/WelcomeNav";
+import HomeJobListing from "../../components/HomeJobListing";
 
 const HomePage = () => {
   useEffect(() => {

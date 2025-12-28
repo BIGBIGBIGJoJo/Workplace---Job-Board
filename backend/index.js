@@ -1,15 +1,20 @@
-const express = require("express");
-const cors = require("cors");
-const bcrypt = require("bcrypt");
-const fs = require("fs");
-
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import bcrypt from "bcrypt";
+import "dotenv/config";
+import { readFileSync, writeFileSync } from "fs";
+import { WorkPlaceMongoDBService } from "./dist/MongoDBService.js";
+import { JsxEmit } from "typescript";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const DB_URL = process.env.DB_URL;
 
 app.use(express.json());
 app.use(cors());
+
+const mongoDb = new WorkPlaceMongoDBService(DB_URL);
+mongoDb.connect();
 
 const validateSigningForm = (user) => {
   const errors = {};
@@ -23,104 +28,83 @@ const validateSigningForm = (user) => {
   return errors;
 };
 
-const getUserDB = () => JSON.parse(fs.readFileSync("users.json", "utf8"));
-
-const getJobDB = () => JSON.parse(fs.readFileSync("jobs.json", "utf8"));
-
-const emailExists = (userDB, userData) =>
-  userDB.some((user) => user.email === userData.email);
-
-// const correctPassword = (userDB, userData) => userDB.some(user => user.email === userData.email && bcrypt.hash(userData.password, 10) === userData.password);
-
-// job fetching
-app.get("/jobFetch", (req, res) => {
+// Job fetching
+app.get("/job-fetch", async (req, res) => {
   try {
-    const jobData = getJobDB();
-    res.json(jobData).status(201);
+    const jobData = await mongoDb.getAllJobs();
+    const job = JSON.parse(jobData);
+    res.status(200).json(job); // 200 OK, not 201
   } catch (error) {
     res.status(500).json({ error: "Failed to read JSON file" });
   }
 });
 
-// Signing, add to user to db with hashing
+// Signing
 app.post("/signing", async (req, res) => {
   try {
     const newUserData = req.body;
-
     const errors = validateSigningForm(newUserData);
+
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({ message: "Invalid form", errors });
     }
 
-    const userDB = getUserDB();
-
-    // Existed email
-    if (emailExists(userDB, newUserData)) {
-      errors.email = "This email has been registrated.";
+    if (await mongoDb.userExist(newUserData.email)) {
       return res.status(400).json({
-        message: "Existed email",
-        errors: errors,
+        message: "Email already exists",
+        errors: { email: "This email has been registered." },
       });
     }
 
-    // No recorded email
     const hashedPassword = await bcrypt.hash(newUserData.password, 10);
-    const newUser = {
-      id: userDB.length,
-      ...newUserData,
-      password: hashedPassword,
-    };
+    newUserData.password = hashedPassword;
 
-    userDB.push(newUser);
-    fs.writeFileSync("users.json", JSON.stringify(userDB, null, 2)); // update db
-
+    await mongoDb.addUser(newUserData);
+  
     res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    console.log("Error:", error);
+    console.error("Signup error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// logging in
+// Login
 app.post("/login", async (req, res) => {
   try {
-    const userData = req.body;
-    const errors = {};
+    const { email, password } = req.body;
 
-    const userDB = getUserDB();
-    const target = userDB.find((user) => user.email === userData.email);
-
-    if (!target) {
-      errors.email = "Email has not been registrated.";
-      return res.status(401).json({ errors: errors });
+    if (await !mongoDb.userExist(email)) {
+      return res.status(401).json({
+        matched: false,
+        errors: { email: "Email not registered." },
+      });
     }
 
-    const passwordMatched = await bcrypt.compare(
-      userData.password,
-      target.password
-    );
+    const user = await mongoDb.getUser(email);
+    let userData = JSON.parse(user);
+    userData = userData[0];
+  
+    const passwordMatched = await bcrypt.compare(password, userData.password);
+
     if (passwordMatched) {
-      res.status(200).json({
+      return res.status(200).json({
         matched: true,
-        user: { firstName: target.firstName, lastName: target.lastName },
+        user: { firstName: userData.firstName, lastName: userData.lastName, role: userData.role },
       });
     } else {
-      errors.form = "Incorrect email or password. Please try again.";
-      res.status(401).json({
+      return res.status(401).json({
         matched: false,
-        errors: errors,
+        errors: { form: "Incorrect email or password." },
       });
     }
-    console.log(
-      `Recevied user (${userData.tab}) \n data: ${userData.email} and ${userData.password},\n in DB: ${target.firstName+ ' ' + target.lastName}`
-    );
   } catch (error) {
-    console.log("Error: ", error);
-    res
-      .status(500)
-      .json({ errors: { form: "An error occurred. Please try again." } });
+    console.error("Login error:", error);
+    res.status(500).json({
+      errors: { form: "Server error. Try again later." },
+    });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}\n`);
 });

@@ -16,9 +16,8 @@ const SignUpPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Signing API call
-    console.log('Form submitted:', formData);
     try {
       const res = await fetch('/api/signing', {
         method: 'POST',
@@ -31,6 +30,7 @@ const SignUpPage = () => {
       const data = await res.json();
 
       console.log('Res: ', data);
+
       if (!res.ok) {                        // failed signing
         setErrors(data.errors);
       } else {                              // successful signing
@@ -50,8 +50,8 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-gradient-to-b from-blue-200 via-blue-50 to-white p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
             Join Our Job Board
@@ -124,8 +124,8 @@ const SignUpPage = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 px-2 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
-                placeholder="••••••••"
+                className="mt-1 px-2 pt-2 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                placeholder="********"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>

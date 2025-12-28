@@ -1,6 +1,6 @@
 import React from 'react'
-import JobListing from '../components/JobListing'
-import LogInBlocking from "../tool/logging/LogInBlocking"
+import JobListing from '../../components/JobListing'
+import LogInBlocking from "../../tool/logging/LogInBlocking"
 
 const JobsPage = () => {
   return (

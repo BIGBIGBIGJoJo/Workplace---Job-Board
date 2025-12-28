@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { SiTicktick } from "react-icons/si";
 import { IoExtensionPuzzle } from "react-icons/io5";
 import { BsFillPersonFill } from "react-icons/bs";
-import PersonCard from "../components/PersonCard";
+import PersonCard from "../../components/PersonCard";
 
 const AboutPage = () => {
   // could be improved

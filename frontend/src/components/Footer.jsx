@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-const EmployeeFooter = () => {
+const Footer = () => {
   return (
     <>
       <footer className="bg-gray-900 text-white">
@@ -96,4 +96,4 @@ const EmployeeFooter = () => {
   )
 }
 
-export default EmployeeFooter
+export default Footer

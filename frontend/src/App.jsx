@@ -7,14 +7,15 @@ import {
 } from "react-router-dom";
 import LoggingStateProvider from "./tool/logging/LoggingStateProvider"
 import EmployeeLayout from "./layout/EmployeeLayout";
-import HomePage from "./pages/HomePage";
-import JobsPage from "./pages/JobsPage";
-import ProfilePage from "./pages/ProfilePage";
-import AboutPage from "./pages/AboutPage";
+import HomePage from "./pages/EmployeePages/HomePage";
+import JobsPage from "./pages/EmployeePages/JobsPage";
+import ProfilePage from "./pages/EmployeePages/ProfilePage";
+import AboutPage from "./pages/EmployeePages/AboutPage";
 import Test from "./components/test";
 import LogInPage from "./pages/authentication/LogInPage";
 import SignUpPage from "./pages/authentication/SignUpPage";
 import UserDataProvider from "./tool/userData/UserDataProvider";
+import EmployerDashboard from "./pages/EmployerPages/EmployerDashboard";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -28,6 +29,9 @@ const App = () => {
           <Route path="/test" element={<Test />} />
           <Route path="/login" element={<LogInPage />} />
           <Route path="/signing" element={<SignUpPage />} />
+        </Route>
+        <Route>
+          <Route path="/employer" element={<EmployerDashboard />} />
         </Route>
       </Route>
     )

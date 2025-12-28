@@ -15,6 +15,9 @@ const EmployeeNavbar = () => {
 
   useEffect(() => {
     switch (location.pathname) {
+      case '/':
+        setSelectedText("Home");
+        break;
       case '/jobs':
         setSelectedText("Jobs");
         break;
@@ -30,7 +33,7 @@ const EmployeeNavbar = () => {
   }, [location.pathname]);
 
   return (
-    <div className="mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 bg-white">
       <div className="flex justify-between h-16">
         <div id="navLinks" className="flex">
           <div className="flex-shrink-0 flex items-center">
