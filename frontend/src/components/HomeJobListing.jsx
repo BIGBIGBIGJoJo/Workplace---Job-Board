@@ -1,8 +1,11 @@
 import React from 'react'
 import JobListing from './JobListing'
 import { BiRefresh } from "react-icons/bi";
+import useJobs from '../tool/jobs/useJobs';
 
 const HomeJobListing = () => {
+  const { refreshJobs } = useJobs();
+
   return (
     <>
       <div className="pb-4 mb-4 mt-10 border-b-2 border-gray-300 max-w-lg mx-auto" >
@@ -12,6 +15,7 @@ const HomeJobListing = () => {
       <JobListing limit={3} />
 
       <button
+        onClick={refreshJobs}
         className="block bg-gray-200 p-4 mb-5 text-gray-500 rounded-md max-w-screen mx-auto cursor-pointer hover:bg-gray-300 hover:text-gray-100 transition duration-200"
       >
         <BiRefresh style={{display: 'inline-block', scale: '150%', margin: '0 7px 2px 0', }}/>

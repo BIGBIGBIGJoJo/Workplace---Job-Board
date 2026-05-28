@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Navigate,
   Route,
   createBrowserRouter,
   createRoutesFromElements,
@@ -16,6 +17,7 @@ import LogInPage from "./pages/authentication/LogInPage";
 import SignUpPage from "./pages/authentication/SignUpPage";
 import UserDataProvider from "./tool/userData/UserDataProvider";
 import EmployerDashboard from "./pages/EmployerPages/EmployerDashboard";
+import JobsProvider from "./tool/jobs/JobsProvider";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -23,6 +25,7 @@ const App = () => {
       <Route>
         <Route element={<EmployeeLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/about" element={<AboutPage />} />
@@ -32,6 +35,9 @@ const App = () => {
         </Route>
         <Route>
           <Route path="/employer" element={<EmployerDashboard />} />
+          <Route path="/employer/post-job" element={<EmployerDashboard />} />
+          <Route path="/employer/jobs" element={<EmployerDashboard />} />
+          <Route path="/employer/view-request" element={<EmployerDashboard />} />
         </Route>
       </Route>
     )
@@ -40,7 +46,9 @@ const App = () => {
   return (
     <LoggingStateProvider>
       <UserDataProvider>
-        <RouterProvider router={router} />
+        <JobsProvider>
+          <RouterProvider router={router} />
+        </JobsProvider>
       </UserDataProvider>
     </LoggingStateProvider>
   );

@@ -1,13 +1,14 @@
 import {
   MongoClient,
-  Db,
-  Collection,
-  FindCursor,
-  type MongoClientOptions,
+  ObjectId,
   ServerApiVersion,
+  type Collection,
+  type Db,
+  type Document,
+  type MongoClientOptions,
 } from "mongodb";
 
-interface NewUser {
+export interface NewUser {
   firstName: string;
   lastName: string;
   email: string;
@@ -15,118 +16,85 @@ interface NewUser {
   role: string;
 }
 
+export interface User extends NewUser {
+  _id: ObjectId;
+}
+
+export interface Job {
+  _id: ObjectId;
+  [key: string]: unknown;
+}
+
+export interface NewJob {
+  title: string;
+  description: string;
+  location: string;
+  salary: number;
+  type: string;
+  company: {
+    name: string;
+    profile: string;
+  };
+  postDate: string;
+  requirement: string[];
+  nature: string;
+}
+
 export class WorkPlaceMongoDBService {
-  private client: MongoClient | null = null;
-  private url: string;
+  private readonly client: MongoClient;
+  private connectPromise: Promise<MongoClient> | null = null;
 
   constructor(url: string) {
-    this.url = url;
-    this.client = this.getClient();
-  }
-
-  private getClient(): MongoClient {
-    //signleton
-    if (!this.client) {
-      const client = new MongoClient(this.url, {
-        serverApi: {
-          version: ServerApiVersion.v1,
-          strict: true,
-          deprecationErrors: true,
-        },
-        maxPoolSize: 20, //default pool config
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000,
-        allowPartialTrustChain: undefined,
-        ALPNProtocols: undefined,
-        ca: undefined,
-        cert: undefined,
-        checkServerIdentity: undefined,
-        ciphers: undefined,
-        crl: undefined,
-        ecdhCurve: undefined,
-        key: undefined,
-        minDHSize: undefined,
-        passphrase: undefined,
-        pfx: undefined,
-        rejectUnauthorized: undefined,
-        secureContext: undefined,
-        secureProtocol: undefined,
-        servername: undefined,
-        session: undefined,
-        autoSelectFamily: undefined,
-        autoSelectFamilyAttemptTimeout: undefined,
-        keepAliveInitialDelay: undefined,
-        family: undefined,
-        hints: undefined,
-        localAddress: undefined,
-        localPort: undefined,
-        lookup: undefined,
-      });
-      this.client = client;
+    if (!url) {
+      throw new Error("MongoDB connection URL is required");
     }
-    return this.client;
-  }
 
-  private async isConnected(): Promise<Boolean> {
-    try {
-      const db = this.client!.db();
-      const res = await db.admin().ping();
-      if (res && res.ok === 1) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (err) {
-      return false;
-    }
+    const options: MongoClientOptions = {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+      maxPoolSize: 20,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+    } as MongoClientOptions;
+
+    this.client = new MongoClient(url, options);
   }
 
   private async getDatabase(dbName: string): Promise<Db> {
-    if (await this.isConnected()) {
-      return this.client!.db(dbName);
-    } else {
-      throw new Error("Client Connection Lost");
-    }
+    const client = await this.connect();
+    return client.db(dbName);
   }
 
-  private async getCollection(
+  private async getCollection<T extends Document = Document>(
     dbName: string,
     collName: string
-  ): Promise<Collection> {
-    if (await this.isConnected()) {
-      return this.client!.db(dbName).collection(collName);
-    } else {
-      throw new Error("Client Connection Lost");
-    }
+  ): Promise<Collection<T>> {
+    return (await this.getDatabase(dbName)).collection<T>(collName);
   }
 
-  async connect(): Promise<void> {
-    try {
-      if (this.client) {
-        await this.client!.connect();
-      }
-    } catch (e) {
-      console.log(e);
+  async connect(): Promise<MongoClient> {
+    if (!this.connectPromise) {
+      this.connectPromise = this.client.connect();
     }
+
+    return this.connectPromise;
   }
 
   async close(): Promise<void> {
-    if (this.client) {
-      await this.client.close();
-      this.client = null;
-    }
+    await this.client.close();
+    this.connectPromise = null;
   }
 
   async userExist(email: string): Promise<boolean> {
-    return (
-      (await (
-        await this.getCollection("Work-Place", "Users")
-      ).findOne({ email: email })) !== null
-    );
+    const usersCollection = await this.getCollection<User>("Work-Place", "Users");
+    return (await usersCollection.countDocuments({ email }, { limit: 1 })) > 0;
   }
 
   async addUser(newUser: NewUser): Promise<void> {
-    const usersCollection = await this.getCollection("Work-Place", "Users");
+    const usersCollection = await this.getCollection<NewUser>("Work-Place", "Users");
     await usersCollection.insertOne({
       firstName: newUser.firstName,
       lastName: newUser.lastName,
@@ -136,32 +104,26 @@ export class WorkPlaceMongoDBService {
     });
   }
 
-  async getUser(userEmail: string): Promise<any> {
-    const user = await (
-      await this.getCollection("Work-Place", "Users")
-    )
-      .find({
-        email: userEmail,
-      })
-      .toArray();
-      
-    return JSON.stringify(user);
+  async getUser(userEmail: string): Promise<User | null> {
+    const usersCollection = await this.getCollection<User>("Work-Place", "Users");
+    return usersCollection.findOne({ email: userEmail });
   }
 
-  async getAllJobs(reverse: Boolean = false): Promise<string> {
-    const findCursor = (await this.getCollection("Work-Place", "Jobs")).find(
-      {}
-    );
-    let res;
-    switch (reverse) {
-      case true:
-        res = await findCursor.sort({ _id: -1 }).toArray();
-        break;
-      case false:
-        res = await findCursor.sort({ _id: 1 }).toArray();
-        break;
-    }
+  async getAllJobs(reverse = false): Promise<Job[]> {
+    const jobsCollection = await this.getCollection<Job>("Work-Place", "Jobs");
+    const sortDirection = reverse ? -1 : 1;
+    return jobsCollection.find({}).sort({ _id: sortDirection }).toArray();
+  }
 
-    return JSON.stringify(res);
+  async addJob(newJob: NewJob): Promise<Job> {
+    const jobsCollection = await this.getCollection<NewJob>("Work-Place", "Jobs");
+    const result = await jobsCollection.insertOne(newJob);
+    return { _id: result.insertedId, ...newJob };
+  }
+
+  async deleteJob(jobId: string): Promise<boolean> {
+    const jobsCollection = await this.getCollection<Job>("Work-Place", "Jobs");
+    const result = await jobsCollection.deleteOne({ _id: new ObjectId(jobId) });
+    return result.deletedCount === 1;
   }
 }

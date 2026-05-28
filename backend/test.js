@@ -1,7 +1,7 @@
-import { MongoDBService } from "./dist/MongoDBService.js";
+import { WorkPlaceMongoDBService } from "./dist/MongoDBService.js";
 
 async function main() {
-  const db = new MongoDBService("mongodb://localhost:27017");
+  const db = new WorkPlaceMongoDBService("mongodb://localhost:27017");
   await db.connect();
   const res = await db.getAllJobs();
   // const coll = await db.get("school", "students");

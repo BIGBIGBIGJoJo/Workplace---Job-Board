@@ -5,9 +5,10 @@ import JobInfo from "./JobInfo";
 const JobCard = ({job}) => {
 
   // Description showing
-  let des = job.description;
+  let des = job.description || "";
+  const companyName = job.company?.name || "Workplace Employer";
   const [showFullDescription, setShowFullDescription] = useState(false);
-  if (!showFullDescription) { des = des.substring(0, 200) + "..." };
+  if (!showFullDescription && des.length > 200) { des = des.substring(0, 200) + "..." };
 
   // Modal hooks
   const [modalOpened, setModalOpened] = useState(false);
@@ -17,7 +18,7 @@ const JobCard = ({job}) => {
   return (
     <div className="max-w-3xl bg-white p-6 rounded-lg shadow-md transition duration-400 hover:shadow-lg h-fit">
       <h3 className="text-xl font-semibold text-gray-700">{job.title}</h3>
-      <p className="mt-2 text-sm text-gray-500">{job.company.name}</p>
+      <p className="mt-2 text-sm text-gray-500">{companyName}</p>
       <p className="mt-1 text-sm text-gray-500">{job.location}</p>
 
       <div className="mt-4 max-w-screen break-words text-sm text-gray-600">{des}</div>
@@ -35,7 +36,7 @@ const JobCard = ({job}) => {
         Show Job Info
       </button>
 
-      <Modal isOpen={modalOpened} closeModal={closeModal} child={<JobInfo key={job.id} job={job}/>} />
+      <Modal isOpen={modalOpened} closeModal={closeModal} child={<JobInfo key={job._id || job.id} job={job}/>} />
 
     </div>
   )

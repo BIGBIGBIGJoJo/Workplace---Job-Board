@@ -3,7 +3,14 @@ import LoggingContext from "./LoggingContext";
 
 
 const LoggingStateProvider = ({ children }) => {
-  const [logged, setLogged] = useState(false);
+  const [logged, setLoggedState] = useState(
+    () => localStorage.getItem("logged") === "true"
+  );
+
+  const setLogged = (value) => {
+    setLoggedState(value);
+    localStorage.setItem("logged", String(value));
+  };
   
   return (
     <LoggingContext.Provider value={{ logged, setLogged }}>

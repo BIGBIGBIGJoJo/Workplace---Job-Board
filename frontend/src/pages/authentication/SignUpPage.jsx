@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { data, Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../../services/api";
 
 const SignUpPage = () => {
   const nav = useNavigate();
@@ -19,28 +20,11 @@ const SignUpPage = () => {
 
     // Signing API call
     try {
-      const res = await fetch('/api/signing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      const data = await res.json();
-
-      console.log('Res: ', data);
-
-      if (!res.ok) {                        // failed signing
-        setErrors(data.errors);
-      } else {                              // successful signing
-        setErrors({});
-        formData.role === "jobseeker" ? nav("/home") : nav("/employer");
-      }
-
+      await api.signup(formData);
+      setErrors({});
+      formData.role === "jobseeker" ? nav("/") : nav("/employer");
     } catch (error) {
-      setErrors(error);
-      console.log("Unexpected error occured:", error);
+      setErrors(error.data?.errors || { form: "Unexpected error occurred" });
     }
   };
 
@@ -163,6 +147,9 @@ const SignUpPage = () => {
               </div>
             </div>
           </div>
+          {errors.form && (
+            <p className="text-sm text-red-600 text-center">{errors.form}</p>
+          )}
           <div>
             <button
               type="submit"

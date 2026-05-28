@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
+    "build": "tsc",
+    "dev": "npm run build && nodemon index.js",
+    "dev:local": "npm run mongo:up && npm run dev",
+    "mongo:down": "docker compose -f ../docker-compose.yml down",
+    "mongo:up": "docker compose -f ../docker-compose.yml up -d mongo",
+    "start": "npm run build && node index.js",
     "tsdev": "ts-node test.ts"
   },
   "keywords": [],

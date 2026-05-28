@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import LoggingContext from '../../tool/logging/LoggingContext';
 import { Link, useNavigate } from 'react-router-dom';
 import UserDataContext from "../../tool/userData/UserDataContext";
-import { useEffect } from "react";
+import { api } from "../../services/api";
 
 const LogInPage = () => {
   const nav = useNavigate();
@@ -34,19 +34,10 @@ const LogInPage = () => {
 
     // Login API call
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      setUser(data.user);
-      console.log(data.user);
+      const data = await api.login(formData);
 
       if (data.matched) {
+        setUser(data.user);
 
         // Remember me
         if (rememberMe) {
@@ -66,7 +57,8 @@ const LogInPage = () => {
         setErrors(data.errors)
       }
     } catch (error) {
-      console.log("Error: ", error)
+      setLogged(false);
+      setErrors(error.data?.errors || { form: "Server error. Try again later." });
     }
   };
 
