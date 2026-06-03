@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
-import LoggingContext from "../tool/logging/LoggingContext";
+import React, { useEffect, useState } from 'react'
 import LogInBlocking from "../tool/logging/LogInBlocking";
 
 const ProfileForm = () => {
@@ -59,7 +58,7 @@ const ProfileForm = () => {
         URL.revokeObjectURL(previewUrl);
       }
     };
-  });
+  }, [previewUrl]);
 
   return (
     <>

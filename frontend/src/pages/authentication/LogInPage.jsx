@@ -1,11 +1,19 @@
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import LoggingContext from '../../tool/logging/LoggingContext';
 import { Link, useNavigate } from 'react-router-dom';
 import UserDataContext from "../../tool/userData/UserDataContext";
 import { api } from "../../services/api";
+import { loadGoogleIdentity } from '../../services/googleIdentity';
+import { FcGoogle } from "react-icons/fc";
+import { MdLockOutline, MdOutlineMailLock, MdWorkOutline } from "react-icons/md";
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+const getDashboardPath = (role) => (role === "employer" ? "/employer" : "/");
 
 const LogInPage = () => {
   const nav = useNavigate();
+  const googleButtonRef = useRef(null);
   
   const [rememberMe, setRememberMe] = useState(() => {
     const storedValue = localStorage.getItem('rememberMe');
@@ -19,6 +27,12 @@ const LogInPage = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [googleState, setGoogleState] = useState({
+    loading: Boolean(googleClientId),
+    ready: false,
+    error: "",
+  });
 
   const { setLogged } = useContext(LoggingContext);
   const { setUser } = useContext(UserDataContext);
@@ -28,9 +42,23 @@ const LogInPage = () => {
     setFormData({...formData, tab: selectedTab });
   };
 
+  const rememberSession = useCallback((user, tab) => {
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', user?.email || formData.email);
+      localStorage.setItem('rememberedTab', tab);
+      localStorage.setItem('rememberMe', 'true');
+      return;
+    }
+
+    localStorage.removeItem('rememberedEmail');
+    localStorage.removeItem('rememberedTab');
+    localStorage.setItem('rememberMe', 'false');
+  }, [formData.email, rememberMe]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
+    setSubmitting(true);
 
     // Login API call
     try {
@@ -38,20 +66,9 @@ const LogInPage = () => {
 
       if (data.matched) {
         setUser(data.user);
-
-        // Remember me
-        if (rememberMe) {
-          localStorage.setItem('rememberedEmail', formData.email);
-          localStorage.setItem('rememberedTab', formData.tab);
-          localStorage.setItem('rememberMe', 'true');
-        } else {
-          localStorage.removeItem('rememberedEmail');
-          localStorage.removeItem('rememberedTab');
-          localStorage.setItem('rememberMe', 'false');
-        }
-
+        rememberSession(data.user, data.user?.role || formData.tab);
         setLogged(true);
-        formData.tab === 'employee' ? nav("/") : nav('/employer');
+        nav(getDashboardPath(data.user?.role || formData.tab));
       } else {
         setLogged(false);
         setErrors(data.errors)
@@ -59,8 +76,81 @@ const LogInPage = () => {
     } catch (error) {
       setLogged(false);
       setErrors(error.data?.errors || { form: "Server error. Try again later." });
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const handleGoogleCredential = useCallback(async (response) => {
+    setErrors({});
+    setGoogleState((currentState) => ({ ...currentState, error: "" }));
+
+    try {
+      const data = await api.googleLogin({
+        credential: response.credential,
+        role: formData.tab === "employer" ? "employer" : "jobseeker",
+      });
+
+      if (!data.matched) {
+        setLogged(false);
+        setErrors(data.errors || { form: "Google login failed." });
+        return;
+      }
+
+      setUser(data.user);
+      rememberSession(data.user, data.user?.role || formData.tab);
+      setLogged(true);
+      nav(getDashboardPath(data.user?.role || formData.tab));
+    } catch (error) {
+      setLogged(false);
+      setErrors(error.data?.errors || { form: "Google login failed. Try again later." });
+    }
+  }, [formData.tab, nav, rememberSession, setLogged, setUser]);
+
+  useEffect(() => {
+    if (!googleClientId) {
+      setGoogleState({
+        loading: false,
+        ready: false,
+        error: "Google login needs VITE_GOOGLE_CLIENT_ID.",
+      });
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    loadGoogleIdentity()
+      .then((google) => {
+        if (cancelled || !googleButtonRef.current) return;
+
+        googleButtonRef.current.innerHTML = "";
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCredential,
+        });
+        google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          type: "standard",
+          shape: "rectangular",
+          text: "signin_with",
+          width: 360,
+        });
+        setGoogleState({ loading: false, ready: true, error: "" });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGoogleState({
+          loading: false,
+          ready: false,
+          error: "Google login could not load.",
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [handleGoogleCredential]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,43 +158,69 @@ const LogInPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-gradient-to-b from-white via-blue-50 to-blue-200 p-8 rounded-xl shadow-2xl transform transition-all duration-300 hover:shadow-xl">
+    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-5xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
+        <aside className="hidden bg-blue-700 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-blue-100">Workplace Access</p>
+            <h1 className="mt-4 text-4xl font-extrabold leading-tight">Sign in and keep your hiring work moving.</h1>
+            <p className="mt-4 text-base leading-7 text-blue-50">
+              Job seekers can manage profiles and applications. Employers can post roles, review listings, and track requests.
+            </p>
+          </div>
+          <div className="grid gap-4 text-sm text-blue-50">
+            <div className="rounded-lg bg-white/10 p-4">
+              <p className="font-semibold text-white">Job seekers</p>
+              <p className="mt-1">Search listings, save profile details, and apply from protected job pages.</p>
+            </div>
+            <div className="rounded-lg bg-white/10 p-4">
+              <p className="font-semibold text-white">Employers</p>
+              <p className="mt-1">Manage job posts and monitor applicant activity from one dashboard.</p>
+            </div>
+          </div>
+        </aside>
 
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            {formData.tab === 'employee' ? 'Employee' : 'Employer'} Log In
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Access your {formData.tab === 'employee' ? 'job opportunities' : 'hiring dashboard'}
-          </p>
-        </div>
+        <section className="p-6 sm:p-10">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Sign in</p>
+            <h2 className="mt-2 text-3xl font-extrabold text-gray-950">
+              {formData.tab === 'employee' ? 'Employee account' : 'Employer account'}
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Choose your account type before signing in so Workplace sends you to the right dashboard.
+            </p>
+          </div>
 
-        <div className="flex mb-6 border-b border-gray-200">
-          <button
-            className={`flex-1 py-3 text-sm font-semibold ${formData.tab === 'employee'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-blue-500'
-              } focus:outline-none`}
-            onClick={() => handleTabSwitch('employee')}
-          >
-            Employee
-          </button>
-          <button
-            className={`flex-1 py-3 text-sm font-semibold ${formData.tab === 'employer'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-blue-500'
-              } focus:outline-none`}
-            onClick={() => handleTabSwitch('employer')}
-          >
-            Employer
-          </button>
-        </div>
+          <div className="mt-8 grid grid-cols-2 rounded-lg bg-gray-100 p-1">
+            <button
+              type="button"
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-md text-sm font-semibold transition ${
+                formData.tab === 'employee'
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              onClick={() => handleTabSwitch('employee')}
+            >
+              <MdOutlineMailLock className="text-lg" />
+              Employee
+            </button>
+            <button
+              type="button"
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-md text-sm font-semibold transition ${
+                formData.tab === 'employer'
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              onClick={() => handleTabSwitch('employer')}
+            >
+              <MdWorkOutline className="text-lg" />
+              Employer
+            </button>
+          </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm text-gray-700">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-800">
                 Email Address
               </label>
               <input
@@ -114,15 +230,16 @@ const LogInPage = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 px-4 py-1 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
+                className="mt-2 min-h-12 block w-full rounded-md border border-gray-300 px-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 placeholder="you@example.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
+
             <div>
-              <label htmlFor="password" className="block text-sm text-gray-700">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-800">
                 Password
               </label>
               <input
@@ -132,76 +249,87 @@ const LogInPage = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 px-4 pt-2 block w-full rounded-full outline-gray-200 shadow-sm hover:outline-1 sm:text-sm transition-all duration-200"
-                placeholder="********"
+                className="mt-2 min-h-12 block w-full rounded-md border border-gray-300 px-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Enter your password"
               />
             </div>
-          </div>
-          {errors.form && (
-            <p className="mt-1 text-sm text-center text-red-600">{errors.form}</p>
-          )}
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                checked={rememberMe}
-                onChange={(e) => {
-                  const newValue = e.target.checked;
-                  setRememberMe(newValue);
-                }}
-              />
-              <label type="checkbox" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-            <Link
-              to="/forget_password"
-              className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
-            >
-              Forgot password?
-            </Link>
-          </div>
 
-          <div>
+            {errors.form && (
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errors.form}</p>
+            )}
+
+            <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center text-gray-700">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span className="ml-2">Remember me</span>
+              </label>
+              <Link
+                to="/forget_password"
+                className="font-semibold text-blue-700 hover:text-blue-900"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+              disabled={submitting}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
             >
-              Log In
+              <MdLockOutline className="text-lg" />
+              {submitting ? 'Signing in...' : 'Sign in'}
             </button>
-          </div>
 
-          <div>
-            <button
-              type="button"
-              className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">or</span>
+              <span className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            {googleClientId ? (
+              <div className="flex justify-center rounded-md border border-gray-200 bg-white p-2">
+                {googleState.loading && (
+                  <div className="flex min-h-10 items-center gap-2 text-sm font-semibold text-gray-600">
+                    <FcGoogle className="text-xl" />
+                    Loading Google sign in...
+                  </div>
+                )}
+                <div className={googleState.ready ? "block" : "hidden"} ref={googleButtonRef} />
+                {googleState.error && (
+                  <p className="text-sm text-red-600">{googleState.error}</p>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 text-sm font-semibold text-gray-500"
+              >
+                <FcGoogle className="text-xl" />
+                Google login needs setup
+              </button>
+            )}
+          </form>
+
+          <p className="mt-6 text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link
+              to="/signing"
+              className="font-semibold text-blue-700 hover:text-blue-900"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M12 0C5.372 0 0 5.373 0 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 22.954 24 17.99 24 12 24 5.373 18.627 0 12 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Log in with Google
-            </button>
-          </div>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link
-            to="/signing"
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
-          >
-            Sign up
-          </Link>
-        </p>
-      </div >
-    </div >
+              Create one
+            </Link>
+          </p>
+        </section>
+      </div>
+    </div>
   );
 };
 

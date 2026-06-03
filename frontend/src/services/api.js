@@ -40,6 +40,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
+  googleLogin: ({ credential, role }) =>
+    request("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential, role }),
+    }),
   signup: (userData) =>
     request("/signing", {
       method: "POST",

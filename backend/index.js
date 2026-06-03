@@ -2,11 +2,14 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
+import { OAuth2Client } from "google-auth-library";
 import { WorkPlaceMongoDBService } from "./dist/MongoDBService.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const DB_URL = process.env.DB_URL;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
 if (!DB_URL) {
   throw new Error("DB_URL environment variable is required");
@@ -16,6 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 const mongoDb = new WorkPlaceMongoDBService(DB_URL);
+const googleClient = new OAuth2Client();
 
 const validateSigningForm = (user) => {
   const errors = {};
@@ -168,6 +172,7 @@ app.post("/login", async (req, res) => {
         user: {
           firstName: userData.firstName,
           lastName: userData.lastName,
+          email: userData.email,
           role: userData.role,
         },
       });
@@ -181,6 +186,80 @@ app.post("/login", async (req, res) => {
     console.error("Login error:", error);
     res.status(500).json({
       errors: { form: "Server error. Try again later." },
+    });
+  }
+});
+
+app.post("/auth/google", async (req, res) => {
+  try {
+    if (!GOOGLE_CLIENT_ID) {
+      return res.status(503).json({
+        errors: { form: "Google login is not configured on the server." },
+      });
+    }
+
+    const { credential, role = "jobseeker" } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        errors: { form: "Google credential is required." },
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.email || payload.email_verified !== true) {
+      return res.status(401).json({
+        errors: { form: "Google account email could not be verified." },
+      });
+    }
+
+    const existingUser = await mongoDb.getUser(payload.email);
+
+    if (existingUser) {
+      return res.status(200).json({
+        matched: true,
+        user: {
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          email: existingUser.email,
+          role: existingUser.role,
+        },
+      });
+    }
+
+    const fallbackNameParts = (payload.name || payload.email.split("@")[0]).split(" ");
+    const firstName = payload.given_name || fallbackNameParts[0] || "Google";
+    const lastName =
+      payload.family_name || fallbackNameParts.slice(1).join(" ") || "User";
+    const safeRole = role === "employer" ? "employer" : "jobseeker";
+    const disabledPassword = await bcrypt.hash(randomUUID(), 10);
+
+    await mongoDb.addUser({
+      firstName,
+      lastName,
+      email: payload.email,
+      password: disabledPassword,
+      role: safeRole,
+    });
+
+    res.status(200).json({
+      matched: true,
+      user: {
+        firstName,
+        lastName,
+        email: payload.email,
+        role: safeRole,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(401).json({
+      errors: { form: "Google login failed. Try again later." },
     });
   }
 });

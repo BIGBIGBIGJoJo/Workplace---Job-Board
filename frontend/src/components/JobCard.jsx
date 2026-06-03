@@ -16,21 +16,22 @@ const JobCard = ({job}) => {
   const openModal = () => setModalOpened(true);
 
   return (
-    <div className="max-w-3xl bg-white p-6 rounded-lg shadow-md transition duration-400 hover:shadow-lg h-fit">
+    <div className="flex h-full min-h-80 w-full flex-col bg-white p-6 rounded-lg shadow-md transition duration-300 hover:shadow-lg">
       <h3 className="text-xl font-semibold text-gray-700">{job.title}</h3>
       <p className="mt-2 text-sm text-gray-500">{companyName}</p>
       <p className="mt-1 text-sm text-gray-500">{job.location}</p>
 
-      <div className="mt-4 max-w-screen break-words text-sm text-gray-600">{des}</div>
+      <div className="mt-4 max-w-screen flex-1 break-words text-sm leading-6 text-gray-600">{des}</div>
 
       <button
         onClick={() => setShowFullDescription((pre) => !pre)}
-        className="block mb-10 cursor-pointer text-blue-500 hover:text-blue-700 text-sm">
+        className="mt-4 block cursor-pointer self-start text-sm font-semibold text-blue-600 hover:text-blue-800">
         {showFullDescription ? 'Less' : 'More'}
       </button>
 
-      <button href="#"
-        className="w-9/10 text-ellipsis text-nowrap overflow-hidden py-2 px-4 cursor-pointer rounded-md border bg-blue-500 text-white hover:bg-white hover:text-blue-500 transition-colors duration-200 md:w-fit"
+      <button
+        type="button"
+        className="mt-6 w-full cursor-pointer rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white hover:text-blue-600"
         onClick={openModal}
       >
         Show Job Info

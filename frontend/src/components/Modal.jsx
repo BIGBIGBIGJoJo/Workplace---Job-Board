@@ -4,12 +4,20 @@ import LoggingContext from "../tool/logging/LoggingContext";
 
 const Modal = ({ isOpen, closeModal, child }) => {
 
-  document.body.style.overflow = isOpen ? "hidden" : "auto";    // Locking and restoring
-
   const { logged } = useContext(LoggingContext);
   const containerRef = useRef(null);
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "auto";
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen]);
+
   useEffect(() => {       // Scrolling when not logged
+    if (!isOpen) return;
+
     const scrollToMiddle = () => {
       if (containerRef.current) {
         const { scrollHeight } = containerRef.current;
@@ -22,10 +30,12 @@ const Modal = ({ isOpen, closeModal, child }) => {
     if (!logged) {
       scrollToMiddle();
     }
-  })
+  }, [isOpen, logged])
 
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const escapeKeyExit = (e) => {        // ESC escape modal
       if (e.key === "Escape") {
         closeModal();
@@ -36,7 +46,7 @@ const Modal = ({ isOpen, closeModal, child }) => {
     return () => {
       document.removeEventListener("keydown", escapeKeyExit);
     }
-  }, []);
+  }, [closeModal, isOpen]);
 
   return (
     <>

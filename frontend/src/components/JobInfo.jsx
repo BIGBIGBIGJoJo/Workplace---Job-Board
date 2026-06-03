@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react'
+import React from 'react'
 import LogInBlocking from "../tool/logging/LogInBlocking"
 
 const JobInfo = ({ job }) => {

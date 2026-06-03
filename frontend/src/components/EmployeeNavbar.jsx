@@ -70,7 +70,7 @@ const EmployeeNavbar = () => {
                 Sign in
               </Link>
             ) : (
-              <p className="text-gray-800 text-shadow-2xs text-lg font-semibold font-mono">Wellcome, {user.firstName}</p>
+              <p className="text-gray-800 text-shadow-2xs text-lg font-semibold font-mono">Welcome, {user.firstName}</p>
             )}
         </div>
       </div>
