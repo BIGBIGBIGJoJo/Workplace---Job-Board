@@ -1,4 +1,13 @@
 {
+  "name": "workplace-job-board",
+  "private": true,
+  "scripts": {
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up --build",
+    "docker:up:detached": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
   "dependencies": {
     "mongodb": "^6.20.0"
   }

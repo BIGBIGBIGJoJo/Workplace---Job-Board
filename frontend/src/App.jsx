@@ -15,6 +15,7 @@ import AboutPage from "./pages/EmployeePages/AboutPage";
 import Test from "./components/Test";
 import LogInPage from "./pages/authentication/LogInPage";
 import SignUpPage from "./pages/authentication/SignUpPage";
+import ForgotPasswordPage from "./pages/authentication/ForgotPasswordPage";
 import UserDataProvider from "./tool/userData/UserDataProvider";
 import EmployerDashboard from "./pages/EmployerPages/EmployerDashboard";
 import JobsProvider from "./tool/jobs/JobsProvider";
@@ -32,6 +33,8 @@ const App = () => {
           <Route path="/test" element={<Test />} />
           <Route path="/login" element={<LogInPage />} />
           <Route path="/signing" element={<SignUpPage />} />
+          <Route path="/forget_password" element={<ForgotPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
         <Route>
           <Route path="/employer" element={<EmployerDashboard />} />

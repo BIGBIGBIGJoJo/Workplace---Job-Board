@@ -24,7 +24,7 @@ const googleClient = new OAuth2Client();
 const validateSigningForm = (user) => {
   const errors = {};
 
-  if (!user.email?.match(/^[\w.%+-]+@([\w-]+\.)+[a-zA-Z]{2,}$/)) {
+  if (!isValidEmail(user.email)) {
     errors.email = "Please enter a valid email";
   }
   if (!user.password || user.password.length < 8) {
@@ -32,6 +32,9 @@ const validateSigningForm = (user) => {
   }
   return errors;
 };
+
+const isValidEmail = (email) =>
+  typeof email === "string" && /^[\w.%+-]+@([\w-]+\.)+[a-zA-Z]{2,}$/.test(email);
 
 const validateJobForm = (job) => {
   const errors = {};
@@ -184,6 +187,32 @@ app.post("/login", async (req, res) => {
     }
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({
+      errors: { form: "Server error. Try again later." },
+    });
+  }
+});
+
+app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        errors: { email: "Please enter a valid email." },
+      });
+    }
+
+    const existingUser = await mongoDb.getUser(email);
+
+    res.status(200).json({
+      message:
+        "If this email exists, reset instructions will be sent when email delivery is configured.",
+      emailKnown: Boolean(existingUser),
+      deliveryConfigured: false,
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
     res.status(500).json({
       errors: { form: "Server error. Try again later." },
     });

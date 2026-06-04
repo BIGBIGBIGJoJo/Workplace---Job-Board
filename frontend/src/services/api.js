@@ -45,6 +45,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ credential, role }),
     }),
+  forgotPassword: ({ email }) =>
+    request("/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
   signup: (userData) =>
     request("/signing", {
       method: "POST",
