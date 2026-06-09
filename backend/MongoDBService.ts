@@ -88,6 +88,12 @@ export class WorkPlaceMongoDBService {
     this.connectPromise = null;
   }
 
+  async ping(): Promise<boolean> {
+    const client = await this.connect();
+    const result = await client.db("admin").command({ ping: 1 });
+    return result.ok === 1;
+  }
+
   async userExist(email: string): Promise<boolean> {
     const usersCollection = await this.getCollection<User>("Work-Place", "Users");
     return (await usersCollection.countDocuments({ email }, { limit: 1 })) > 0;
@@ -115,10 +121,25 @@ export class WorkPlaceMongoDBService {
     return jobsCollection.find({}).sort({ _id: sortDirection }).toArray();
   }
 
+  async countJobs(): Promise<number> {
+    const jobsCollection = await this.getCollection<Job>("Work-Place", "Jobs");
+    return jobsCollection.countDocuments();
+  }
+
   async addJob(newJob: NewJob): Promise<Job> {
     const jobsCollection = await this.getCollection<NewJob>("Work-Place", "Jobs");
     const result = await jobsCollection.insertOne(newJob);
     return { _id: result.insertedId, ...newJob };
+  }
+
+  async seedJobs(newJobs: NewJob[]): Promise<number> {
+    if (newJobs.length === 0 || (await this.countJobs()) > 0) {
+      return 0;
+    }
+
+    const jobsCollection = await this.getCollection<NewJob>("Work-Place", "Jobs");
+    const result = await jobsCollection.insertMany(newJobs);
+    return result.insertedCount;
   }
 
   async deleteJob(jobId: string): Promise<boolean> {

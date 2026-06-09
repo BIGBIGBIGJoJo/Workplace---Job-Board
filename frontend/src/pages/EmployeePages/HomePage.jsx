@@ -6,7 +6,7 @@ import HomeJobListing from "../../components/HomeJobListing";
 const HomePage = () => {
   useEffect(() => {
     document.title = "Home Page - Workplace";
-  });
+  }, []);
 
   return (
     <>

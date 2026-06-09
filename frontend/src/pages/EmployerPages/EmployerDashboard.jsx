@@ -372,9 +372,9 @@ const JobsTable = ({ jobs, loading, error, onDelete }) => {
           <tr className="text-left text-xs font-bold uppercase tracking-wider text-gray-500">
             <th className="py-3 pr-4">Role</th>
             <th className="py-3 pr-4">Location</th>
-            <th className="py-3 pr-4">Type</th>
-            <th className="py-3 pr-4">Salary</th>
-            <th className="py-3 pr-4">Posted</th>
+            <th className="w-28 py-3 pr-4 whitespace-nowrap">Type</th>
+            <th className="py-3 pr-4 whitespace-nowrap">Salary</th>
+            <th className="py-3 pr-4 whitespace-nowrap">Posted</th>
             {onDelete && <th className="py-3 pr-4 text-right">Action</th>}
           </tr>
         </thead>
@@ -391,12 +391,14 @@ const JobsTable = ({ jobs, loading, error, onDelete }) => {
                   {job.location}
                 </span>
               </td>
-              <td className="py-4 pr-4">
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">{job.type}</span>
+              <td className="w-28 py-4 pr-4">
+                <span className="inline-flex min-w-20 justify-center whitespace-nowrap rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold leading-5 text-gray-700">
+                  {job.type}
+                </span>
               </td>
-              <td className="py-4 pr-4 font-semibold text-gray-900">${Number(job.salary || 0).toLocaleString()}</td>
+              <td className="py-4 pr-4 font-semibold whitespace-nowrap text-gray-900">${Number(job.salary || 0).toLocaleString()}</td>
               <td className="py-4 pr-4">
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
                   <MdEvent className="text-base text-gray-400" />
                   {job.postDate || 'Recently'}
                 </span>

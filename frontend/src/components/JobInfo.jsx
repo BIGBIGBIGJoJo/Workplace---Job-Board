@@ -1,5 +1,6 @@
 import React from 'react'
 import LogInBlocking from "../tool/logging/LogInBlocking"
+import companyIcon from "../images/company icon.png"
 
 const JobInfo = ({ job }) => {
   const companyName = job.company?.name || "Workplace Employer";
@@ -15,7 +16,7 @@ const JobInfo = ({ job }) => {
       <LogInBlocking>
         <div className="m-9">
           <div className="text-center font-mono mb-12">
-            <img src="../images/company icon.png" alt="Company Logo" className="mx-auto mb-6 h-28 " />
+            <img src={companyIcon} alt="Company Logo" className="mx-auto mb-6 h-28 " />
             <h1 className="text-5xl font-extrabold text-blue-600 tracking-wide">{companyName}</h1>
             <p className="text-2xl text-gray-600 mt-3 font-bold">{job.title}</p>
             <div className="mt-8 text-sm text-black bg-blue-100 px-5 py-2 rounded-full inline-block shadow-sm">

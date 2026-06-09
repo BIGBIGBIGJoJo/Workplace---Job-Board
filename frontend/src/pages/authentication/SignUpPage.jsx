@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import { MdBusinessCenter, MdOutlinePersonSearch } from "react-icons/md";
+import LoggingContext from '../../tool/logging/LoggingContext';
+import UserDataContext from '../../tool/userData/UserDataContext';
 
 const SignUpPage = () => {
   const nav = useNavigate();
+  const { setLogged } = useContext(LoggingContext);
+  const { setUser } = useContext(UserDataContext);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -24,9 +28,11 @@ const SignUpPage = () => {
 
     // Signing API call
     try {
-      await api.signup(formData);
+      const data = await api.signup(formData);
       setErrors({});
-      formData.role === "jobseeker" ? nav("/") : nav("/employer");
+      setUser(data.user);
+      setLogged(true);
+      data.user?.role === "employer" ? nav("/employer") : nav("/");
     } catch (error) {
       setErrors(error.data?.errors || { form: "Unexpected error occurred" });
     } finally {

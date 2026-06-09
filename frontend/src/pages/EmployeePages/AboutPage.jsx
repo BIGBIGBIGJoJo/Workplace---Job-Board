@@ -83,14 +83,15 @@ const AboutPage = () => {
               >
                 Browse jobs
               </Link>
-              <Link
-                to="https://github.com/BIGBIGBIGJoJo"
+              <a
+                href="https://github.com/BIGBIGBIGJoJo"
                 target="_blank"
+                rel="noreferrer"
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition hover:border-blue-300 hover:text-blue-700"
               >
                 <FaGithub className="text-lg" />
                 GitHub
-              </Link>
+              </a>
             </div>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

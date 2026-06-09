@@ -1,98 +1,74 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+const footerSections = [
+  {
+    title: "Explore",
+    links: [
+      { label: "Jobs", to: "/jobs" },
+      { label: "About", to: "/about" },
+      { label: "Profile", to: "/profile" },
+    ],
+  },
+  {
+    title: "Account",
+    links: [
+      { label: "Sign in", to: "/login" },
+      { label: "Create account", to: "/signing" },
+      { label: "Forgot password", to: "/forgot-password" },
+    ],
+  },
+];
+
 const Footer = () => {
   return (
-    <>
-      <footer className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="mb-20 grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider">Workplace</h3>
-              <p className="mt-4 text-sm">Connecting talent with opportunity.</p>
-            </div>
-            <div>
-              <div className='w-4/6'>
-                <h3 className="text-sm font-semibold uppercase border-white border-b tracking-wider">Explore</h3>
-              </div>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Jobs
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Companies
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Career Advice
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <div className='w-4/6'>
-                <h3 className="text-sm font-semibold uppercase border-white border-b tracking-wider">Support</h3>
-              </div>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Help Center
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Privacy Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <div className='w-4/6'>
-                <h3 className="text-sm font-semibold uppercase border-white border-b tracking-wider">Connect</h3>
-              </div>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Twitter
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    LinkedIn
-                  </Link>
-                </li>
-                <li>
-                  <Link to="https://github.com/BIGBIGBIGJoJo" target="_blank"
-                    className="text-sm hover:text-gray-300 transition duration-300">
-                    Facebook
-                  </Link>
-                </li>
-              </ul>
-            </div>
+    <footer className="bg-gray-950 text-white">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-blue-200">Workplace</h3>
+            <p className="mt-4 text-sm leading-6 text-gray-300">
+              A full-stack job board demo for candidate search, account flows, and employer operations.
+            </p>
           </div>
-          <div className="mt-8 border-t-2 border-gray-700 pt-8 text-center">
-            <p className="text-sm">&copy; Workplace by JoJo 2025 </p>
+
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-200">{section.title}</h3>
+              <ul className="mt-4 space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.to}>
+                    <Link to={link.to} className="text-sm text-gray-300 transition hover:text-white">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-200">Connect</h3>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <a
+                  href="https://github.com/BIGBIGBIGJoJo"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-gray-300 transition hover:text-white"
+                >
+                  GitHub
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
-      </footer>
-    </>
+
+        <div className="mt-10 border-t border-white/10 pt-6 text-center">
+          <p className="text-sm text-gray-400">&copy; Workplace by JoJo 2026</p>
+        </div>
+      </div>
+    </footer>
   )
 }
 

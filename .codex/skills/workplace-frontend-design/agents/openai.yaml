@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workplace Frontend Design"
+  short_description: "Project UI patterns for Workplace"
+  default_prompt: "Use $workplace-frontend-design to design or implement a Workplace frontend screen consistently."

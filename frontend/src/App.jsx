@@ -12,7 +12,6 @@ import HomePage from "./pages/EmployeePages/HomePage";
 import JobsPage from "./pages/EmployeePages/JobsPage";
 import ProfilePage from "./pages/EmployeePages/ProfilePage";
 import AboutPage from "./pages/EmployeePages/AboutPage";
-import Test from "./components/Test";
 import LogInPage from "./pages/authentication/LogInPage";
 import SignUpPage from "./pages/authentication/SignUpPage";
 import ForgotPasswordPage from "./pages/authentication/ForgotPasswordPage";
@@ -30,7 +29,6 @@ const App = () => {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/test" element={<Test />} />
           <Route path="/login" element={<LogInPage />} />
           <Route path="/signing" element={<SignUpPage />} />
           <Route path="/forget_password" element={<ForgotPasswordPage />} />

@@ -134,7 +134,7 @@ const LogInPage = () => {
           type: "standard",
           shape: "rectangular",
           text: "signin_with",
-          width: 360,
+          width: 400,
         });
         setGoogleState({ loading: false, ready: true, error: "" });
       })
@@ -293,29 +293,50 @@ const LogInPage = () => {
               <span className="h-px flex-1 bg-gray-200" />
             </div>
 
-            {googleClientId ? (
-              <div className="flex justify-center rounded-md border border-gray-200 bg-white p-2">
-                {googleState.loading && (
-                  <div className="flex min-h-10 items-center gap-2 text-sm font-semibold text-gray-600">
-                    <FcGoogle className="text-xl" />
-                    Loading Google sign in...
-                  </div>
-                )}
-                <div className={googleState.ready ? "block" : "hidden"} ref={googleButtonRef} />
-                {googleState.error && (
-                  <p className="text-sm text-red-600">{googleState.error}</p>
-                )}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <div className="flex items-start gap-3 border-b border-gray-200 pb-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white shadow-sm">
+                  <FcGoogle className="text-xl" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Continue with Google</p>
+                  <p className="mt-1 text-sm leading-5 text-gray-600">
+                    We'll use your selected account type to send you to the right Workplace dashboard.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-4 text-sm font-semibold text-gray-500"
-              >
-                <FcGoogle className="text-xl" />
-                Google login needs setup
-              </button>
-            )}
+
+              {googleClientId ? (
+                <div className="mt-4">
+                  <div className="flex min-h-12 items-center justify-center">
+                    {googleState.loading && (
+                      <div className="flex min-h-11 w-full max-w-md items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-600">
+                        <FcGoogle className="text-xl" />
+                        Loading Google sign in...
+                      </div>
+                    )}
+                    <div
+                      className={googleState.ready ? "block w-full max-w-md [&>div]:mx-auto" : "hidden"}
+                      ref={googleButtonRef}
+                    />
+                  </div>
+                  {googleState.error && (
+                    <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {googleState.error}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-4 flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-500"
+                >
+                  <FcGoogle className="text-xl" />
+                  Google login needs setup
+                </button>
+              )}
+            </div>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">

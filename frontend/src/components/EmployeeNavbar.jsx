@@ -1,36 +1,22 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import LoggingContext from "../tool/logging/LoggingContext";
 import UserDataContext from "../tool/userData/UserDataContext";
 
 const EmployeeNavbar = () => {
   const location = useLocation();
-  const [selectedText, setSelectedText] = useState();
-
   const { logged } = useContext(LoggingContext);
   const { user } = useContext(UserDataContext);
 
+  const selectedTextByPath = {
+    "/": "Home",
+    "/jobs": "Jobs",
+    "/profile": "Profile",
+    "/about": "About",
+  };
+  const selectedText = selectedTextByPath[location.pathname] || "";
   const selectedStyle = "link border-blue-500 cursor-pointer text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition duration-100";
   const defaultStyle = "link text-gray-500 cursor-pointer hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-bold transition duration-100";
-
-  useEffect(() => {
-    switch (location.pathname) {
-      case '/':
-        setSelectedText("Home");
-        break;
-      case '/jobs':
-        setSelectedText("Jobs");
-        break;
-      case '/profile':
-        setSelectedText("Profile");
-        break;
-      case '/about':
-        setSelectedText("About");
-        break;
-      default:
-        setSelectedText("");
-    }
-  }, [location.pathname]);
 
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 bg-white">

@@ -5,6 +5,7 @@ import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import { WorkPlaceMongoDBService } from "./dist/MongoDBService.js";
+import { defaultJobs } from "./defaultJobs.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,15 +21,37 @@ app.use(cors());
 
 const mongoDb = new WorkPlaceMongoDBService(DB_URL);
 const googleClient = new OAuth2Client();
+const allowedRoles = new Set(["jobseeker", "employer"]);
+
+const normalizeEmail = (email) =>
+  typeof email === "string" ? email.trim().toLowerCase() : "";
+
+const normalizeRole = (role) => (role === "employer" ? "employer" : "jobseeker");
+
+const toPublicUser = (user) => ({
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  role: user.role,
+});
 
 const validateSigningForm = (user) => {
   const errors = {};
 
+  if (!user.firstName?.trim()) {
+    errors.firstName = "First name is required";
+  }
+  if (!user.lastName?.trim()) {
+    errors.lastName = "Last name is required";
+  }
   if (!isValidEmail(user.email)) {
     errors.email = "Please enter a valid email";
   }
   if (!user.password || user.password.length < 8) {
     errors.password = "Password must be at least 8 characters";
+  }
+  if (user.role && !allowedRoles.has(user.role)) {
+    errors.role = "Please choose a valid account type";
   }
   return errors;
 };
@@ -54,6 +77,16 @@ const validateJobForm = (job) => {
 
   return errors;
 };
+
+app.get("/health", async (req, res) => {
+  try {
+    await mongoDb.ping();
+    res.status(200).json({ status: "ok", database: "connected" });
+  } catch (error) {
+    console.error("Health check error:", error);
+    res.status(503).json({ status: "error", database: "unavailable" });
+  }
+});
 
 // Job fetching
 app.get("/job-fetch", async (req, res) => {
@@ -127,7 +160,9 @@ app.post("/signing", async (req, res) => {
       return res.status(400).json({ message: "Invalid form", errors });
     }
 
-    if (await mongoDb.userExist(newUserData.email)) {
+    const email = normalizeEmail(newUserData.email);
+
+    if (await mongoDb.userExist(email)) {
       return res.status(400).json({
         message: "Email already exists",
         errors: { email: "This email has been registered." },
@@ -135,11 +170,20 @@ app.post("/signing", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newUserData.password, 10);
-    newUserData.password = hashedPassword;
+    const createdUser = {
+      firstName: newUserData.firstName.trim(),
+      lastName: newUserData.lastName.trim(),
+      email,
+      password: hashedPassword,
+      role: normalizeRole(newUserData.role),
+    };
 
-    await mongoDb.addUser(newUserData);
+    await mongoDb.addUser(createdUser);
 
-    res.status(201).json({ message: "User created successfully" });
+    res.status(201).json({
+      message: "User created successfully",
+      user: toPublicUser(createdUser),
+    });
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -158,7 +202,7 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    const userData = await mongoDb.getUser(email);
+    const userData = await mongoDb.getUser(normalizeEmail(email));
 
     if (!userData) {
       return res.status(401).json({
@@ -172,12 +216,7 @@ app.post("/login", async (req, res) => {
     if (passwordMatched) {
       return res.status(200).json({
         matched: true,
-        user: {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          role: userData.role,
-        },
+        user: toPublicUser(userData),
       });
     } else {
       return res.status(401).json({
@@ -203,7 +242,7 @@ app.post("/forgot-password", async (req, res) => {
       });
     }
 
-    const existingUser = await mongoDb.getUser(email);
+    const existingUser = await mongoDb.getUser(normalizeEmail(email));
 
     res.status(200).json({
       message:
@@ -247,43 +286,34 @@ app.post("/auth/google", async (req, res) => {
       });
     }
 
-    const existingUser = await mongoDb.getUser(payload.email);
+    const email = normalizeEmail(payload.email);
+    const existingUser = await mongoDb.getUser(email);
 
     if (existingUser) {
       return res.status(200).json({
         matched: true,
-        user: {
-          firstName: existingUser.firstName,
-          lastName: existingUser.lastName,
-          email: existingUser.email,
-          role: existingUser.role,
-        },
+        user: toPublicUser(existingUser),
       });
     }
 
-    const fallbackNameParts = (payload.name || payload.email.split("@")[0]).split(" ");
+    const fallbackNameParts = (payload.name || email.split("@")[0]).split(" ");
     const firstName = payload.given_name || fallbackNameParts[0] || "Google";
     const lastName =
       payload.family_name || fallbackNameParts.slice(1).join(" ") || "User";
-    const safeRole = role === "employer" ? "employer" : "jobseeker";
     const disabledPassword = await bcrypt.hash(randomUUID(), 10);
-
-    await mongoDb.addUser({
+    const createdUser = {
       firstName,
       lastName,
-      email: payload.email,
+      email,
       password: disabledPassword,
-      role: safeRole,
-    });
+      role: normalizeRole(role),
+    };
+
+    await mongoDb.addUser(createdUser);
 
     res.status(200).json({
       matched: true,
-      user: {
-        firstName,
-        lastName,
-        email: payload.email,
-        role: safeRole,
-      },
+      user: toPublicUser(createdUser),
     });
   } catch (error) {
     console.error("Google login error:", error);
@@ -295,6 +325,10 @@ app.post("/auth/google", async (req, res) => {
 
 try {
   await mongoDb.connect();
+  const seededJobCount = await mongoDb.seedJobs(defaultJobs);
+  if (seededJobCount > 0) {
+    console.log(`Seeded ${seededJobCount} demo jobs`);
+  }
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}\n`);
   });
